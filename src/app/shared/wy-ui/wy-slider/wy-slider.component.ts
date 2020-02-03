@@ -1,0 +1,257 @@
+import {
+  Component, OnInit, ViewEncapsulation, ChangeDetectionStrategy,
+  ElementRef, ViewChild, Input, Inject, ChangeDetectorRef, OnDestroy, forwardRef, Output, EventEmitter
+} from '@angular/core';
+import { fromEvent, merge, Observable, Subscription } from 'rxjs';
+import { filter, tap, pluck, map, distinctUntilChanged, takeUntil } from 'rxjs/internal/operators';
+import { SliderEventObserverConfig, SlideValue } from './wy-slider-types';
+import { sliderEvent, getElementOffset } from './wy-slider-helper';
+import { DOCUMENT } from '@angular/common';
+import { inArray } from 'src/app/util/array';
+import { limitNumberInRange, getPercent } from 'src/app/util/number';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+
+
+
+@Component({
+  selector: 'app-wy-slider',
+  templateUrl: './wy-slider.component.html',
+  styleUrls: ['./wy-slider.component.less'],
+  encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [{
+    provide: NG_VALUE_ACCESSOR,
+    useExisting: forwardRef(() => WySliderComponent),
+    multi: true
+  }]
+})
+export class WySliderComponent implements OnInit, OnDestroy, ControlValueAccessor {
+  @Input() wyVertical = false;
+  @Input() wyMin = 0;
+  @Input() wyMax = 100;
+  @Input() bufferOffset: SlideValue = 0;
+
+  @Output() wyOnAfterChange = new EventEmitter<SlideValue>();
+
+  private sliderDom: HTMLDivElement;
+  @ViewChild('wySlider', { static: true }) private wySlider: ElementRef;
+
+  private dragStart$: Observable<number>;
+  private dragMove$: Observable<number>;
+  private dragEnd$: Observable<Event>;
+
+  private dragStart_: Subscription | null;
+  private dragMove_: Subscription | null;
+  private dragEnd_: Subscription | null;
+
+  isDragging: boolean;
+  value: SlideValue = null;
+  offset: SlideValue = null;
+
+  constructor(
+    @Inject(DOCUMENT) private doc: Document,
+    private cdr: ChangeDetectorRef
+  ) { }
+
+  ngOnInit() {
+    this.sliderDom = this.wySlider.nativeElement;
+    this.createDraggingObservables();
+    this.subscribeDrag(['start']);
+  }
+  ngOnDestroy(): void {
+    this.dragStart_.unsubscribe();
+    this.dragMove_.unsubscribe();
+    this.dragEnd_.unsubscribe();
+  }
+
+  writeValue(value: SlideValue): void {
+    this.setValue(value, true);
+  }
+
+  registerOnChange(fn: (value: SlideValue) => void): void {
+    this.onValueChange = fn;
+  }
+
+  registerOnTouched(fn: () => void): void {
+    this.onTouched = fn;
+  }
+  private onValueChange(value: SlideValue) {
+
+  }
+  private onTouched(value: SlideValue) {
+
+  }
+  private createDraggingObservables() {
+    const orientField = this.wyVertical ? 'pageY' : 'pageX';
+
+    const mouse: SliderEventObserverConfig = {
+      start: 'mousedown',
+      move: 'mousemove',
+      end: 'mouseup',
+      filter: (e: MouseEvent) => e instanceof MouseEvent,
+      pluckKey: [orientField]
+
+    };
+
+    const touch: SliderEventObserverConfig = {
+      start: 'touchstart',
+      move: 'touchmove',
+      end: 'touchend',
+      filter: (e: TouchEvent) => e instanceof TouchEvent,
+      pluckKey: ['touches', '0', orientField]
+    };
+
+    [mouse, touch].forEach(source => {
+
+      const { start, move, end, filter: filerFunc, pluckKey } = source;
+      source.startPlucked$ = fromEvent(this.sliderDom, start)
+        .pipe(
+          filter(filerFunc),
+          tap(sliderEvent),
+          pluck(...pluckKey),
+          map((position: number) => this.findClosestValue(position))
+        );
+
+      source.end$ = fromEvent(this.doc, end);
+
+      source.moveResolved$ = fromEvent(this.doc, move).pipe(
+        filter(filerFunc),
+        tap(sliderEvent),
+        pluck(...pluckKey),
+        distinctUntilChanged(),
+        map((position: number) => this.findClosestValue(position)),
+        takeUntil(source.end$)
+      );
+    });
+
+    this.dragStart$ = merge(mouse.startPlucked$, touch.startPlucked$);
+    this.dragMove$ = merge(mouse.moveResolved$, touch.moveResolved$);
+    this.dragEnd$ = merge(mouse.end$, touch.end$);
+  }
+
+  private subscribeDrag(events: string[] = ['start', 'move', 'end']) {
+    if (inArray(events, 'start') && this.dragStart$ && !this.dragStart_) {
+      this.dragStart_ = this.dragStart$.subscribe(this.onDragStart.bind(this));
+    }
+    if (inArray(events, 'move') && this.dragMove$ && !this.dragMove_) {
+      this.dragMove_ = this.dragMove$.subscribe(this.onDragMove.bind(this));
+    }
+    if (inArray(events, 'end') && this.dragEnd$ && !this.dragEnd_) {
+      this.dragEnd_ = this.dragEnd$.subscribe(this.onDragEnd.bind(this));
+    }
+  }
+
+  private unsubscribeDrag(events: string[] = ['start', 'move', 'end']) {
+    if (inArray(events, 'start') && this.dragStart_) {
+      this.dragStart_.unsubscribe();
+      this.dragStart_ = null;
+    }
+    if (inArray(events, 'move') && this.dragMove_) {
+      this.dragMove_.unsubscribe();
+      this.dragMove_ = null;
+
+    }
+    if (inArray(events, 'end') && this.dragEnd_) {
+      this.dragEnd_.unsubscribe();
+      this.dragEnd_ = null;
+    }
+  }
+
+  private onDragStart(value: number) {
+    this.toggleDragMoving(true);
+    this.setValue(value);
+  }
+
+  private onDragMove(value: number) {
+    if (this.isDragging) {
+      this.setValue(value);
+      this.cdr.markForCheck();
+    }
+  }
+
+
+  private onDragEnd() {
+    this.wyOnAfterChange.emit(this.value);
+    this.toggleDragMoving(false);
+    this.cdr.markForCheck();
+  }
+
+  private setValue(value: number, needCheck = false) {
+
+    if (needCheck) {
+      if (this.isDragging) { return; }
+      this.value = this.formateValue(value);
+      this.updateTrackAndHandles();
+    } else if (!this.valueEqual(this.value, value)) {
+      this.value = value;
+      this.updateTrackAndHandles();
+      this.onValueChange(this.value);
+    }
+  }
+
+  private formateValue(value: SlideValue): SlideValue {
+    let res = value;
+    if (this.assertValueValid(value)) {
+      res = this.wyMin;
+    } else {
+      res = limitNumberInRange(value, this.wyMin, this.wyMax);
+    }
+    return res;
+  }
+  // 判断是否为NAN
+  private assertValueValid(value: SlideValue): boolean {
+    return isNaN(typeof value !== 'number' ? parseFloat(value) : value);
+  }
+
+  private valueEqual(valA: SlideValue, valB: SlideValue): boolean {
+    if (typeof valA !== typeof valB) {
+      return false;
+    }
+    return valA === valB;
+  }
+
+  private updateTrackAndHandles() {
+    this.offset = this.getValueToOffset(this.value);
+    this.cdr.markForCheck();
+  }
+
+  private getValueToOffset(value: SlideValue): SlideValue {
+    return getPercent(this.wyMin, this.wyMax, value);
+  }
+
+  private toggleDragMoving(movable: boolean) {
+    this.isDragging = movable;
+    if (movable) {
+      this.subscribeDrag(['move', 'end']);
+    } else {
+      this.unsubscribeDrag(['move', 'end']);
+    }
+  }
+
+
+  findClosestValue(position: number): number {
+    // 获取滑块总长
+    const sliderLength = this.getSliderLength();
+
+    // 滑块（左，上端点）
+    const sliderStart = this.getSliderStartPosition();
+
+    // 滑块当前位置/总长
+    const ratio = limitNumberInRange((position - sliderStart) / sliderLength, 0, 1);
+
+    const ratioTrue = this.wyVertical ? (1 - ratio) : ratio;
+
+
+
+    return ratioTrue * (this.wyMax - this.wyMin) + this.wyMin;
+  }
+
+  private getSliderLength(): number {
+    return this.wyVertical ? this.sliderDom.clientHeight : this.sliderDom.clientWidth;
+  }
+
+  private getSliderStartPosition(): number {
+    const offset = getElementOffset(this.sliderDom);
+    return this.wyVertical ? offset.top : offset.left;
+  }
+}

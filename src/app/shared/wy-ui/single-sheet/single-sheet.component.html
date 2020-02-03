@@ -1,0 +1,15 @@
+<ng-container>
+  <a class="cover">
+    <img [src]="sheet.picUrl" alt="">
+    <div class="bottom">
+      <div class="mum">
+        <i class="icon erji"></i>
+        <span>{{sheet.playCount|playCount}}</span>
+      </div>
+      <i class="icon play" (click)="playSheet(sheet.id)"></i>
+    </div>
+  </a>
+  <span class="des">
+    {{sheet.name}}
+  </span>
+</ng-container>
