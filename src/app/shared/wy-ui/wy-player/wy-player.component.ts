@@ -4,9 +4,25 @@ import { Store, select } from '@ngrx/store';
 import { getSongList, getPlayList, getCurrentIndex, getPlayer, getPlayMode, getCurrentSong } from 'src/app/store/selectors/player.selector';
 import { Song } from 'src/app/services/data-type/common.types';
 import { PlayMode } from './player-type';
-import { SetCurrentIndex } from 'src/app/store/actions/player.action';
+import { SetCurrentIndex, SetPlayMode, SetPlayList } from 'src/app/store/actions/player.action';
 import { Subscription, fromEvent } from 'rxjs';
 import { DOCUMENT } from '@angular/common';
+import { shuffle } from 'src/app/util/array';
+
+
+const modeTypes: PlayMode[] = [
+  {
+    type: 'loop',
+    label: '循环'
+  },
+  {
+    type: 'random',
+    label: '随机'
+  }, {
+    type: 'singleLoop',
+    label: '单曲循环'
+  },
+];
 
 @Component({
   selector: 'app-wy-player',
@@ -40,6 +56,10 @@ export class WyPlayerComponent implements OnInit {
 
   // 点击的是音量面板本身
   selfClick = false;
+
+  // 当前模式
+  currentMode: PlayMode;
+  modeCount = 0;
 
   private winClick: Subscription;
 
@@ -97,6 +117,19 @@ export class WyPlayerComponent implements OnInit {
 
   private watchPlayMode(mode: PlayMode) {
     console.log('mode', mode);
+    this.currentMode = mode;
+
+    if (this.songList) {
+      let list = this.songList.slice();
+      if (mode.type === 'random') {
+        list = shuffle(this.songList);
+
+        this.updateCurrentIndex(list, this.currentSong);
+        this.store$.dispatch(SetPlayList({ playList: list }));
+      }
+
+    }
+
   }
 
   private watchCurrentSong(song: Song) {
@@ -105,6 +138,19 @@ export class WyPlayerComponent implements OnInit {
       this.currentSong = song;
       this.duration = song.dt / 1000;
     }
+  }
+
+  private updateCurrentIndex(list: Song[], song: Song) {
+
+    const newIndex = list.findIndex(item => item.id === song.id);
+    this.store$.dispatch(SetCurrentIndex({ currentIndex: newIndex }));
+
+  }
+  // 改变模式
+  changeMode() {
+    const temp = modeTypes[++this.modeCount % 3];
+    this.store$.dispatch(SetPlayMode({ playMode: temp }));
+
   }
 
   onPercentChange(percent: number) {
@@ -189,6 +235,17 @@ export class WyPlayerComponent implements OnInit {
       this.updateIndex(newIndex);
     }
   }
+
+  // 播放结束
+  onEnded() {
+    this.playing = false;
+    if (this.currentMode.type === 'singleLoop') {
+      this.loop();
+    } else {
+      this.onNext(this.currentIndex + 1);
+    }
+  }
+
   private loop() {
     this.audioEl.currentTime = 0;
     this.play();
