@@ -51,6 +51,7 @@
           </app-wy-slider>
         </div>
       </div>
+      <app-wy-player-panel [currentSong]="currentSong" [songList]="songList"></app-wy-player-panel>
     </div>
   </div>
   <audio #audio [src]="currentSong?.url" (canplay)="onCanplay()" (timeupdate)="onTimeUpdate($event)"
