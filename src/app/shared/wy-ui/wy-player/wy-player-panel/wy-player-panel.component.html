@@ -1,4 +1,4 @@
-<div class="play-panel show">
+<div class="play-panel" [class.show]="show">
   <div class="hd">
     <div class="hdc">
       <h4>播放列表（<span>{{songList.length}}</span>）</h4>
@@ -12,7 +12,7 @@
       <p class="playing-name">
         {{currentSong?.name}}
       </p>
-      <i class="icon close"></i>
+      <i class="icon close" (click)="onClose.emit()"></i>
     </div>
   </div>
   <div class="bd">
@@ -20,7 +20,8 @@
     <div class="msk"></div>
     <div class="list-wrap">
       <ul>
-        <li *ngFor="let item of songList;let i = index">
+        <li *ngFor="let item of songList;let i = index" [class.current]="currentIndex===i"
+          (click)="onChangeSong.emit(item)">
           <i class="col arrow"></i>
           <div class="col name ellipsis">{{item.name}}</div>
           <div class="col icons">
