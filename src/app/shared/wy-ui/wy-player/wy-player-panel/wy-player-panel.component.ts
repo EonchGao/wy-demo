@@ -5,6 +5,8 @@ import {
 } from '@angular/core';
 import { Song } from 'src/app/services/data-type/common.types';
 import { WyScrollComponent } from '../wy-scroll/wy-scroll.component';
+import { findIndex } from 'src/app/util/array';
+
 
 @Component({
   selector: 'app-wy-player-panel',
@@ -14,10 +16,10 @@ import { WyScrollComponent } from '../wy-scroll/wy-scroll.component';
 export class WyPlayerPanelComponent implements OnInit, OnChanges {
 
   scrollY: number = 0;
+  currentIndex: number;
 
   @Input() songList: Song[];
   @Input() currentSong: Song;
-  @Input() currentIndex: number;
   @Input() show: boolean;
 
   @Output() onClose = new EventEmitter<void>();
@@ -33,9 +35,13 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['songList']) {
       console.log('songList', this.songList);
+      this.currentIndex = 0;
+
     }
+
     if (changes['currentSong']) {
       if (this.currentSong) {
+        this.currentIndex = findIndex(this.songList, this.currentSong);
         if (this.show) {
           this.scrollToCurrent();
         }
@@ -50,17 +56,14 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
 
         setTimeout(() => {
           if (this.currentSong) {
-            this.scrollToCurrent();
+            this.scrollToCurrent(0);
           }
         }, 80);
-
-
       }
-
     }
   }
 
-  private scrollToCurrent() {
+  private scrollToCurrent(speed: number = 300) {
     const songListRefs = this.wyScroll.first.el.nativeElement.querySelectorAll('ul li');
     if (songListRefs.length) {
       const currentLi = songListRefs[this.currentIndex || 0] as HTMLElement;
@@ -68,7 +71,7 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
       const offsetHeight = currentLi.offsetHeight;
 
       if ((offsetTop - Math.abs(this.scrollY)) > offsetHeight * 5 || (offsetTop < Math.abs(this.scrollY))) {
-        this.wyScroll.first.scrollToElement(currentLi, 300, false, false);
+        this.wyScroll.first.scrollToElement(currentLi, speed, false, false);
       }
 
 

@@ -6,9 +6,12 @@ import { SingerService } from 'src/app/services/singer.service';
 import { ActivatedRoute } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { SheetService } from 'src/app/services/sheet.service';
-import { Store } from '@ngrx/store';
+import { Store, select } from '@ngrx/store';
 import { AppStoreModule } from 'src/app/store';
 import { SetSongList, SetPlayList, SetCurrentIndex } from 'src/app/store/actions/player.action';
+import { PlayState } from 'src/app/store/reducers/player.reducer';
+import { getPlayer } from 'src/app/store/selectors/player.selector';
+import { findIndex, shuffle } from 'src/app/util/array';
 
 @Component({
   selector: 'app-home',
@@ -26,6 +29,8 @@ export class HomeComponent implements OnInit {
   @ViewChild(NzCarouselComponent, { static: true })
   private nzCarousel: NzCarouselComponent;
 
+  private playerState: PlayState;
+
   constructor(
     private route: ActivatedRoute,
     private sheetService: SheetService,
@@ -37,6 +42,8 @@ export class HomeComponent implements OnInit {
       this.songSheetList = songSheetList;
       this.singers = singers;
     });
+
+    this.store$.pipe(select(getPlayer)).subscribe((res: any) => this.playerState = res);
   }
 
   ngOnInit() {
@@ -51,14 +58,22 @@ export class HomeComponent implements OnInit {
   }
 
   onPlaySheet(id: number) {
-    console.log(id)
     this.sheetService.playSheet(id).subscribe(list => {
       console.log('song:', list);
       this.store$.dispatch(SetSongList({ songList: list }));
-      this.store$.dispatch(SetPlayList({ playList: list }));
-      this.store$.dispatch(SetCurrentIndex({ currentIndex: 0 }));
+
+      let trueIndex = 0;
+      let trueList = list.slice();
+
+      if (this.playerState.playMode.type === 'random') {
+        trueList = shuffle(list || []);
+        trueIndex = findIndex(trueList, list[trueIndex]);
+      }
+
+      this.store$.dispatch(SetPlayList({ playList: trueList }));
+      this.store$.dispatch(SetCurrentIndex({ currentIndex: trueIndex }));
     });
   }
-  
+
 
 }
