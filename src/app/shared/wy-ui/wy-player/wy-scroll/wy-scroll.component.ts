@@ -17,6 +17,7 @@ import BScroll from '@better-scroll/core';
 import ScrollBar from '@better-scroll/scroll-bar';
 BScroll.use(ScrollBar);
 import MouseWheel from '@better-scroll/mouse-wheel';
+import { timer } from 'rxjs';
 BScroll.use(MouseWheel);
 
 @Component({
@@ -71,8 +72,12 @@ export class WyScrollComponent implements OnInit, AfterViewInit, OnChanges {
   }
 
   refreshScroll() {
-    setTimeout(() => {
+    timer(this.refreshDelay).subscribe(() => {
       this.refresh();
-    }, this.refreshDelay);
+    });
+
+    // setTimeout(() => {
+    //   this.refresh();
+    // }, this.refreshDelay);
   }
 }

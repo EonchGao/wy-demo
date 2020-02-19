@@ -1,11 +1,13 @@
 import {
   Component,
   OnInit, Input, Output, OnChanges, SimpleChanges, EventEmitter
-  , ViewChildren, QueryList
+  , ViewChildren, QueryList, Inject
 } from '@angular/core';
 import { Song } from 'src/app/services/data-type/common.types';
 import { WyScrollComponent } from '../wy-scroll/wy-scroll.component';
 import { findIndex } from 'src/app/util/array';
+import { timer } from 'rxjs';
+import { WINDOW } from 'src/app/services/services.module';
 
 
 @Component({
@@ -27,7 +29,7 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
 
   @ViewChildren(WyScrollComponent) wyScroll: QueryList<WyScrollComponent>;
 
-  constructor() { }
+  constructor(@Inject(WINDOW) private win: Window) { }
 
   ngOnInit() {
   }
@@ -54,7 +56,13 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
       if (!changes['show'].firstChange && this.show) {
         this.wyScroll.first.refreshScroll();
 
-        setTimeout(() => {
+        // timer(80).subscribe(() => {
+        //   if (this.currentSong) {
+        //     this.scrollToCurrent(0);
+        //   }
+        // });
+
+        this.win.setTimeout(() => {
           if (this.currentSong) {
             this.scrollToCurrent(0);
           }
