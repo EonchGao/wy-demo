@@ -39,3 +39,8 @@ export interface SongUrl {
     url: string;
 }
 
+export interface Lyric {
+    lrc: string;
+    tlyric: string;
+}
+
