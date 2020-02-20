@@ -40,7 +40,7 @@ export interface SongUrl {
 }
 
 export interface Lyric {
-    lrc: string;
+    lyric: string;
     tlyric: string;
 }
 

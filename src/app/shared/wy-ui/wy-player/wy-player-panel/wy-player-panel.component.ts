@@ -9,6 +9,7 @@ import { findIndex } from 'src/app/util/array';
 import { timer } from 'rxjs';
 import { WINDOW } from 'src/app/services/services.module';
 import { SongService } from 'src/app/services/song.service';
+import { WyLyric, BasicLyricLine } from './wy-lyyic';
 
 
 @Component({
@@ -20,6 +21,7 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
 
   scrollY: number = 0;
   currentIndex: number;
+  currentLyric: BasicLyricLine[] = [];
 
   @Input() songList: Song[];
   @Input() currentSong: Song;
@@ -60,6 +62,7 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
     if (changes['show']) {
       if (!changes['show'].firstChange && this.show) {
         this.wyScroll.first.refreshScroll();
+        this.wyScroll.last.refreshScroll();
 
         // timer(80).subscribe(() => {
         //   if (this.currentSong) {
@@ -78,7 +81,10 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
 
   private updateLyric() {
     this.songServe.getLyric(this.currentSong.id).subscribe(res => {
-      console.log('res', res)
+      console.log('res', res);
+
+      const lyric = new WyLyric(res);
+      this.currentLyric = lyric.lines;
     });
   }
 
