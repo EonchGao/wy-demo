@@ -28,7 +28,6 @@ export class WyLyric {
     }
 
     private generLyric() {
-        console.log('lrc', this.lrc.lyric);
         const lines = this.lrc.lyric.split('\n'); // 分割数组
 
         lines.forEach(line => this.makeLine(line));
@@ -38,6 +37,17 @@ export class WyLyric {
     }
 
     private generTLyric() {
+        const lines = this.lrc.lyric.split('\n');
+        const tlines = this.lrc.tlyric.split('\n').filter(item => timeExp.exec(item) !== null);
+        const moreLine = lines.length - tlines.length;
+
+        let tempArr = [];
+        if (moreLine >= 0) {
+            tempArr = [lines, tlines];
+        } else {
+            tempArr = [tlines, lines];
+        }
+
 
     }
 
