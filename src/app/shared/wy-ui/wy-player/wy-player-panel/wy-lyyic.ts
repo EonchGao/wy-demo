@@ -1,4 +1,6 @@
 import { Lyric } from 'src/app/services/data-type/common.types';
+import { zip, from, Subscription, Observable } from 'rxjs';
+import { skip } from 'rxjs/operators';
 
 const timeExp = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/;
 
@@ -47,20 +49,49 @@ export class WyLyric {
         } else {
             tempArr = [tlines, lines];
         }
+        const first = timeExp.exec(tempArr[1][0])[0];
+        console.log('first', first);
 
+        const skipIndex = tempArr[0].findIndex(item => {
+            const exec = timeExp.exec(item);
+            console.log('exec--->', exec);
+            if (exec) {
+                return exec[0] === first;
+            }
+        });
 
+        const _skip = skipIndex === -1 ? 0 : skipIndex;
+        const skipItems = tempArr[0].slice(0, _skip);
+        if (skipItems.length) {
+            skipItems.forEach(line => {
+                this.makeLine(line);
+            });
+        }
+
+        let zipLines$: Observable<any>;
+        if (moreLine > 0) {
+            zipLines$ = zip(from(lines).pipe(skip(_skip)), from(tlines));
+
+        } else {
+            zipLines$ = zip(from(lines), from(tlines).pipe(skip(_skip)));
+
+        }
+        zipLines$.subscribe(([line, tline]) => {
+            this.makeLine(line, tline);
+        });
     }
 
-    private makeLine(line: string) {
+    private makeLine(line: string, tline = '') {
         const result = timeExp.exec(line);
         console.log('result', result);
         if (result) {
             const txt = line.replace(timeExp, '').trim();
-            const txtCn = '';
+            const txtCn = tline ? tline.replace(timeExp, '').trim() : '';
+
             if (txt) {
                 const thirdResult = result[3] || '00';
                 const len = thirdResult.length;
-                const _thirdResult = len > 2 ? parseInt(thirdResult) : parseInt(thirdResult) * 10;
+                const _thirdResult = len > 2 ? parseInt(thirdResult, 10) : parseInt(thirdResult, 10) * 10;
                 const time = Number(result[1]) * 60 * 1000 + Number(result[2]) * 1000 + _thirdResult;
                 this.lines.push({ txt, txtCn, time });
             }
