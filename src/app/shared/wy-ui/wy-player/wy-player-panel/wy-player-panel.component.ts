@@ -22,7 +22,9 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
   scrollY: number = 0;
   currentIndex: number;
   currentLyric: BasicLyricLine[] = [];
+  lyric: WyLyric;
 
+  @Input() playing: boolean;
   @Input() songList: Song[];
   @Input() currentSong: Song;
   @Input() show: boolean;
@@ -42,9 +44,12 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['songList']) {
-      console.log('songList', this.songList);
       this.currentIndex = 0;
-
+    }
+    if (changes['playing']) {
+      if (!changes['playing'].firstChange && this.playing) {
+        this.lyric.play();
+      }
     }
 
     if (changes['currentSong']) {
@@ -81,10 +86,12 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
 
   private updateLyric() {
     this.songServe.getLyric(this.currentSong.id).subscribe(res => {
-      console.log('res', res);
-
-      const lyric = new WyLyric(res);
-      this.currentLyric = lyric.lines;
+      this.lyric = new WyLyric(res);
+      this.currentLyric = this.lyric.lines;
+      this.wyScroll.last.scrollTo(0, 0);
+      if (this.playing) {
+        this.lyric.play();
+      }
     });
   }
 

@@ -59,7 +59,7 @@ export class HomeComponent implements OnInit {
 
   onPlaySheet(id: number) {
     this.sheetService.playSheet(id).subscribe(list => {
-      console.log('song:', list);
+
       this.store$.dispatch(SetSongList({ songList: list }));
 
       let trueIndex = 0;
