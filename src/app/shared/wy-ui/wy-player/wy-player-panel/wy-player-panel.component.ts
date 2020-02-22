@@ -47,8 +47,9 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
       this.currentIndex = 0;
     }
     if (changes['playing']) {
-      if (!changes['playing'].firstChange && this.playing) {
-        this.lyric.play();
+      if (!changes['playing'].firstChange) {
+
+        this.lyric&&this.lyric.togglePlay(this.playing);
       }
     }
 
