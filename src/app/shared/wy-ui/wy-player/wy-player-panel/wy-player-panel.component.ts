@@ -18,7 +18,7 @@ import { WyLyric, BasicLyricLine } from './wy-lyyic';
   styleUrls: ['./wy-player-panel.component.less']
 })
 export class WyPlayerPanelComponent implements OnInit, OnChanges {
-
+  currentLineNum:number;
   scrollY: number = 0;
   currentIndex: number;
   currentLyric: BasicLyricLine[] = [];
@@ -88,11 +88,19 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
     this.songServe.getLyric(this.currentSong.id).subscribe(res => {
       this.lyric = new WyLyric(res);
       this.currentLyric = this.lyric.lines;
+
+      this.handleLyric();
       this.wyScroll.last.scrollTo(0, 0);
       if (this.playing) {
         this.lyric.play();
       }
     });
+  }
+
+  private handleLyric() {
+    this.lyric.handle.subscribe(({ lineNum }) => {
+      this.currentLineNum = lineNum;
+    })
   }
 
   private scrollToCurrent(speed: number = 300) {

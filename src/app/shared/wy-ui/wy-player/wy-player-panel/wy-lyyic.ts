@@ -21,7 +21,10 @@ export class WyLyric {
     private curNum: number;
     private startStamp: number;
     lines: LyricLine[] = [];
-    private handle = new Subject<Handle>();
+    handle = new Subject<Handle>();
+
+    timer: any;
+    pauseStamp: number;
 
     constructor(private lrc: Lyric) {
         this.init();
@@ -125,6 +128,7 @@ export class WyLyric {
         // this.callHandle();
 
         if (this.curNum < this.lines.length) {
+            clearTimeout(this.timer);
             this.playReset();
         }
     }
@@ -132,7 +136,7 @@ export class WyLyric {
     private playReset() {
         let line = this.lines[this.curNum];
         const delay = line.time - (Date.now() - this.startStamp);
-        setTimeout(() => {
+        this.timer = setTimeout(() => {
             this.callHandle(this.curNum++);
             if (this.curNum < this.lines.length && this.playing) {
                 this.playReset();
@@ -152,5 +156,22 @@ export class WyLyric {
         const index = this.lines.findIndex(item => time <= item.time);
 
         return index === -1 ? this.lines.length - 1 : index;
+    }
+    togglePlay(playing: boolean) {
+        const now = Date.now();
+        this.playing = playing;
+        if (playing) {
+            const startTime = (this.pauseStamp || now) - (this.startStamp || now);
+            this.play(startTime);
+        } else {
+            this.stop();
+            this.pauseStamp = now;
+        }
+    }
+    private stop() {
+        if (this.playing) {
+            this.playing = false;
+        }
+        clearTimeout(this.timer)
     }
 }
