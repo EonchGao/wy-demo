@@ -168,7 +168,7 @@ export class WyLyric {
             this.pauseStamp = now;
         }
     }
-    private stop() {
+    stop() {
         if (this.playing) {
             this.playing = false;
         }

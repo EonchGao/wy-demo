@@ -1,7 +1,7 @@
 import {
   Component,
   OnInit, Input, Output, OnChanges, SimpleChanges, EventEmitter
-  , ViewChildren, QueryList, Inject
+  , ViewChildren, QueryList, Inject, ElementRef
 } from '@angular/core';
 import { Song } from 'src/app/services/data-type/common.types';
 import { WyScrollComponent } from '../wy-scroll/wy-scroll.component';
@@ -18,11 +18,12 @@ import { WyLyric, BasicLyricLine } from './wy-lyyic';
   styleUrls: ['./wy-player-panel.component.less']
 })
 export class WyPlayerPanelComponent implements OnInit, OnChanges {
-  currentLineNum:number;
+  currentLineNum: number;
   scrollY: number = 0;
   currentIndex: number;
   currentLyric: BasicLyricLine[] = [];
   lyric: WyLyric;
+  lyricRefs: NodeList;
 
   @Input() playing: boolean;
   @Input() songList: Song[];
@@ -49,7 +50,7 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
     if (changes['playing']) {
       if (!changes['playing'].firstChange) {
 
-        this.lyric&&this.lyric.togglePlay(this.playing);
+        this.lyric && this.lyric.togglePlay(this.playing);
       }
     }
 
@@ -61,6 +62,7 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
           this.scrollToCurrent();
         }
       } else {
+        this.resetLyric();
 
       }
 
@@ -86,11 +88,13 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
   }
 
   private updateLyric() {
+    this.resetLyric();
     this.songServe.getLyric(this.currentSong.id).subscribe(res => {
       this.lyric = new WyLyric(res);
       this.currentLyric = this.lyric.lines;
+      const startLine = res.tlyric ? 0 : 2;
 
-      this.handleLyric();
+      this.handleLyric(startLine);
       this.wyScroll.last.scrollTo(0, 0);
       if (this.playing) {
         this.lyric.play();
@@ -98,10 +102,35 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
     });
   }
 
-  private handleLyric() {
+  private handleLyric(startLine = 2) {
     this.lyric.handle.subscribe(({ lineNum }) => {
-      this.currentLineNum = lineNum;
-    })
+      if (!this.lyricRefs) {
+        this.lyricRefs = this.wyScroll.last.el.nativeElement.querySelectorAll('ul li');
+      }
+
+      if (this.lyricRefs.length) {
+        this.currentLineNum = lineNum;
+        if (lineNum > startLine) {
+          const targetLine = this.lyricRefs[lineNum - startLine];
+          if (targetLine) {
+            this.wyScroll.last.scrollToElement(targetLine, 300, false, false);
+          }
+        } else {
+          this.wyScroll.last.scrollTo(0, 0);
+        }
+
+      }
+    });
+  }
+
+  private resetLyric() {
+    if (this.lyric) {
+      this.lyric.stop();
+      this.lyric = null;
+      this.currentLyric = [];
+      this.currentLineNum = 0;
+      this.lyricRefs = null;
+    }
   }
 
   private scrollToCurrent(speed: number = 300) {
