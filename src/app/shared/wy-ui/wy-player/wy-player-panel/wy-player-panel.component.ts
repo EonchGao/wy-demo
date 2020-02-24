@@ -32,6 +32,8 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
 
   @Output() onClose = new EventEmitter<void>();
   @Output() onChangeSong = new EventEmitter<Song>();
+  @Output() onDeleteSong = new EventEmitter<Song>();
+  @Output() onClearSong = new EventEmitter<void>();
 
   @ViewChildren(WyScrollComponent) wyScroll: QueryList<WyScrollComponent>;
 
@@ -45,7 +47,7 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['songList']) {
-      this.currentIndex = 0;
+      this.updateCurrentIndex();
     }
     if (changes['playing']) {
       if (!changes['playing'].firstChange) {
@@ -56,7 +58,7 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
 
     if (changes['currentSong']) {
       if (this.currentSong) {
-        this.currentIndex = findIndex(this.songList, this.currentSong);
+        this.updateCurrentIndex();
         this.updateLyric();
         if (this.show) {
           this.scrollToCurrent();
@@ -85,6 +87,10 @@ export class WyPlayerPanelComponent implements OnInit, OnChanges {
         }, 80);
       }
     }
+  }
+  private updateCurrentIndex() {
+    this.currentIndex = findIndex(this.songList, this.currentSong);
+
   }
 
   private updateLyric() {
