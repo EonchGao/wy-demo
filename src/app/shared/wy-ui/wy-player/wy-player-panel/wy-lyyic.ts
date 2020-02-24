@@ -1,6 +1,6 @@
 import { Lyric } from 'src/app/services/data-type/common.types';
-import { zip, from, Observable, Subject } from 'rxjs';
-import { skip } from 'rxjs/operators';
+import { zip, from, Observable, Subject, Subscription, timer } from 'rxjs';
+import { skip, timeout } from 'rxjs/operators';
 
 const timeExp = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/;
 
@@ -23,7 +23,7 @@ export class WyLyric {
     lines: LyricLine[] = [];
     handle = new Subject<Handle>();
 
-    timer: any;
+    timer$: Subscription;
     pauseStamp: number;
 
     constructor(private lrc: Lyric) {
@@ -131,7 +131,7 @@ export class WyLyric {
         }
 
         if (this.curNum < this.lines.length) {
-            clearTimeout(this.timer);
+            this.clearTimer();
             this.playReset();
         }
     }
@@ -139,12 +139,17 @@ export class WyLyric {
     private playReset() {
         let line = this.lines[this.curNum];
         const delay = line.time - (Date.now() - this.startStamp);
-        this.timer = setTimeout(() => {
+        this.timer$ = timer(delay).subscribe(() => {
             this.callHandle(this.curNum++);
             if (this.curNum < this.lines.length && this.playing) {
                 this.playReset();
             }
-        }, delay);
+        });
+    }
+
+    private clearTimer() {
+        this.timer$ && this.timer$.unsubscribe();
+
     }
 
     private callHandle(i: number) {
@@ -174,16 +179,16 @@ export class WyLyric {
             this.pauseStamp = now;
         }
     }
+
     stop() {
         if (this.playing) {
             this.playing = false;
         }
-        clearTimeout(this.timer);
+        this.clearTimer();
     }
 
     seek(time: number) {
         this.play(time);
-
     }
 
 }
