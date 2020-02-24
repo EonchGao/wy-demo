@@ -117,7 +117,7 @@ export class WyLyric {
         }
     }
 
-    play(startTime = 0) {
+    play(startTime = 0, skip = false) {
         if (!this.lines.length) { return; }
 
         if (!this.playing) {
@@ -125,7 +125,10 @@ export class WyLyric {
         }
         this.curNum = this.findCurNum(startTime);
         this.startStamp = Date.now() - startTime;
-        // this.callHandle();
+        if (!skip) {
+
+            this.callHandle(this.curNum - 1);
+        }
 
         if (this.curNum < this.lines.length) {
             clearTimeout(this.timer);
@@ -145,11 +148,13 @@ export class WyLyric {
     }
 
     private callHandle(i: number) {
-        this.handle.next({
-            txt: this.lines[i].txt,
-            txtCn: this.lines[i].txtCn,
-            lineNum: i
-        });
+        if (i > 0) {
+            this.handle.next({
+                txt: this.lines[i].txt,
+                txtCn: this.lines[i].txtCn,
+                lineNum: i
+            });
+        }
     }
 
     private findCurNum(time: number): number {
@@ -157,12 +162,13 @@ export class WyLyric {
 
         return index === -1 ? this.lines.length - 1 : index;
     }
+
     togglePlay(playing: boolean) {
         const now = Date.now();
         this.playing = playing;
         if (playing) {
             const startTime = (this.pauseStamp || now) - (this.startStamp || now);
-            this.play(startTime);
+            this.play(startTime, true);
         } else {
             this.stop();
             this.pauseStamp = now;
@@ -172,6 +178,12 @@ export class WyLyric {
         if (this.playing) {
             this.playing = false;
         }
-        clearTimeout(this.timer)
+        clearTimeout(this.timer);
     }
+
+    seek(time: number) {
+        this.play(time);
+
+    }
+
 }

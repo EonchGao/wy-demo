@@ -8,6 +8,7 @@ import { SetCurrentIndex, SetPlayMode, SetPlayList } from 'src/app/store/actions
 import { Subscription, fromEvent } from 'rxjs';
 import { DOCUMENT } from '@angular/common';
 import { shuffle, findIndex } from 'src/app/util/array';
+import { WyPlayerPanelComponent } from './wy-player-panel/wy-player-panel.component';
 
 
 const modeTypes: PlayMode[] = [
@@ -66,6 +67,7 @@ export class WyPlayerComponent implements OnInit {
   private winClick: Subscription;
 
   @ViewChild('audio', { static: true }) audio: ElementRef;
+  @ViewChild(WyPlayerPanelComponent, { static: false }) playerPanel: WyPlayerPanelComponent;
 
   private audioEl: HTMLAudioElement;
 
@@ -157,7 +159,11 @@ export class WyPlayerComponent implements OnInit {
 
   onPercentChange(percent: number) {
     if (this.currentSong) {
-      this.audioEl.currentTime = this.duration * (percent / 100);
+      const currentTime = this.duration * (percent / 100);
+      this.audioEl.currentTime = currentTime;
+      if (this.playerPanel) {
+        this.playerPanel.seekLyric(currentTime * 1000);
+      }
     }
   }
 
@@ -251,6 +257,7 @@ export class WyPlayerComponent implements OnInit {
     this.playing = false;
     if (this.currentMode.type === 'singleLoop') {
       this.loop();
+
     } else {
       this.onNext(this.currentIndex + 1);
     }
@@ -259,7 +266,11 @@ export class WyPlayerComponent implements OnInit {
   private loop() {
     this.audioEl.currentTime = 0;
     this.play();
+    if (this.playerPanel) {
+      this.playerPanel.seekLyric(0);
+    }
   }
+
   private updateIndex(index: number) {
     this.store$.dispatch(SetCurrentIndex({ currentIndex: index }));
     this.songReady = false;
