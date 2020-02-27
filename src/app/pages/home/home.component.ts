@@ -1,8 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { HomeService } from 'src/app/services/home.service';
 import { Banner, HotTag, SongSheet, Singer } from 'src/app/services/data-type/common.types';
 import { NzCarouselComponent, th_TH } from 'ng-zorro-antd';
-import { SingerService } from 'src/app/services/singer.service';
 import { ActivatedRoute } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { SheetService } from 'src/app/services/sheet.service';
@@ -12,6 +10,7 @@ import { SetSongList, SetPlayList, SetCurrentIndex } from 'src/app/store/actions
 import { PlayState } from 'src/app/store/reducers/player.reducer';
 import { getPlayer } from 'src/app/store/selectors/player.selector';
 import { findIndex, shuffle } from 'src/app/util/array';
+import { BatchActionsService } from 'src/app/store/batch-actions.service';
 
 @Component({
   selector: 'app-home',
@@ -34,7 +33,8 @@ export class HomeComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private sheetService: SheetService,
-    private store$: Store<AppStoreModule>
+    private store$: Store<AppStoreModule>,
+    private batchActionsService: BatchActionsService
   ) {
     this.route.data.pipe(map(res => res.homeData)).subscribe(([banners, hotTags, songSheetList, singers]) => {
       this.banners = banners;
@@ -59,19 +59,7 @@ export class HomeComponent implements OnInit {
 
   onPlaySheet(id: number) {
     this.sheetService.playSheet(id).subscribe(list => {
-
-      this.store$.dispatch(SetSongList({ songList: list }));
-
-      let trueIndex = 0;
-      let trueList = list.slice();
-
-      if (this.playerState.playMode.type === 'random') {
-        trueList = shuffle(list || []);
-        trueIndex = findIndex(trueList, list[trueIndex]);
-      }
-
-      this.store$.dispatch(SetPlayList({ playList: trueList }));
-      this.store$.dispatch(SetCurrentIndex({ currentIndex: trueIndex }));
+      this.batchActionsService.selectPlayList({ list, index: 0 });
     });
   }
 
