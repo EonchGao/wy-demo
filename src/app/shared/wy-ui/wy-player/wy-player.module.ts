@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { FormatTimePipe } from '../../pipes/format-time.pipe';
 import { WyPlayerPanelComponent } from './wy-player-panel/wy-player-panel.component';
 import { WyScrollComponent } from './wy-scroll/wy-scroll.component';
+import { ClickOutsideDirective } from '../../directives/clickoutside.directive';
 
 
 
@@ -14,7 +15,8 @@ import { WyScrollComponent } from './wy-scroll/wy-scroll.component';
     WyPlayerComponent,
     FormatTimePipe,
     WyPlayerPanelComponent,
-    WyScrollComponent
+    WyScrollComponent,
+    ClickOutsideDirective,
   ],
   imports: [
     CommonModule,
@@ -23,7 +25,8 @@ import { WyScrollComponent } from './wy-scroll/wy-scroll.component';
   ],
   exports: [
     WyPlayerComponent,
-    FormatTimePipe
+    FormatTimePipe,
+    ClickOutsideDirective,
   ]
 })
 export class WyPlayerModule { }

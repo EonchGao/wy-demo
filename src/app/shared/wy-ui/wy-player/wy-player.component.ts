@@ -59,12 +59,14 @@ export class WyPlayerComponent implements OnInit {
 
   showPanel = false;
 
-  // 点击的是音量面板本身
-  selfClick = false;
+  // 是否绑定document click事件
+  bindFlag = false;
 
   // 当前模式
   currentMode: PlayMode;
   modeCount = 0;
+
+
 
   private winClick: Subscription;
 
@@ -158,7 +160,12 @@ export class WyPlayerComponent implements OnInit {
   changeMode() {
     const temp = modeTypes[++this.modeCount % 3];
     this.store$.dispatch(SetPlayMode({ playMode: temp }));
+  }
 
+  onClickOutSide() {
+    this.showVolumePanel = false;
+    this.showPanel = false;
+    this.bindFlag = false;
   }
 
   onPercentChange(percent: number) {
@@ -191,23 +198,14 @@ export class WyPlayerComponent implements OnInit {
 
   togglePanel(type: string) {
     this[type] = !this[type];
-    if (this.showVolumePanel || this.showPanel) { // 音量面板显示
-      this.bindDocumentClickListener();
-    } else {
-      this.unbindDocumentClickListener();
-    }
-  }
-  private bindDocumentClickListener() {
-    if (!this.winClick) {
-      this.winClick = fromEvent(this.doc, 'click').subscribe(() => {
-        if (!this.selfClick) { // 说明点击了播放器意外的部分
-          this.showVolumePanel = false;
-          this.showPanel = false;
-          this.unbindDocumentClickListener();
-        }
-        this.selfClick = false;
-      });
-    }
+    // if (this.showVolumePanel || this.showPanel) { // 音量面板显示
+    //   this.bindFlag = true;
+    // } else {
+    //   this.bindFlag = false;
+    // }
+
+    this.bindFlag = (this.showVolumePanel || this.showPanel);
+
   }
 
   private unbindDocumentClickListener() {
