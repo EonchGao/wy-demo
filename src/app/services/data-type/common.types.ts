@@ -44,3 +44,8 @@ export interface Lyric {
     tlyric: string;
 }
 
+// 歌单列表 
+export interface SheetList {
+    playlists: SongSheet[];
+    total: number;
+}
