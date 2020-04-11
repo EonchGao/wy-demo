@@ -34,7 +34,7 @@ export class SheetService {
     return this.http.get(this.uri + 'top/playlist', { params }).pipe(map(res => res as SheetList))
 
   }
-
+  // 获取歌单详情
   getSongSheetDetail(id: number): Observable<SongSheet[]> {
 
     const params = new HttpParams().set('id', id.toString());

@@ -16,6 +16,14 @@ export interface SongSheet {
     picUrl: string;
     coverImgUrl: string;
     playCount: number;
+    tags: string[];
+    createTime: number;
+    creator: { nicname: string; avatarUrl: string; };
+    description: string;
+    subscribedCount: number;
+    shareCount: number;
+    commentCount: number;
+    subscribed: boolean;
     tracks: Array<Song>;
 }
 
