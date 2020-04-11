@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ServicesModule } from 'src/app/services/services.module';
 import { SheetParams, SheetService } from 'src/app/services/sheet.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SheetList } from 'src/app/services/data-type/common.types';
 import { BatchActionsService } from 'src/app/store/batch-actions.service';
 
@@ -23,6 +23,7 @@ export class SheetListComponent implements OnInit {
   orderValue = 'hot';
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private sheetService: SheetService,
     private batchActionsService: BatchActionsService
   ) {
@@ -55,4 +56,11 @@ export class SheetListComponent implements OnInit {
     this.listParams.offset = 1;
     this.getList();
   }
+
+  toInfo(id: number) {
+
+    this.router.navigate(['sheetInfo', id]);
+  }
+
+
 }

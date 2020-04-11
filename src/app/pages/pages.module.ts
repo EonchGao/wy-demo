@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { HomeModule } from './home/home.module';
 import { SheetListModule } from './sheet-list/sheet-list.module';
+import { SheetInfoModule } from './sheet-list/sheet-info/sheet-info.module';
 
 
 @NgModule({
@@ -9,11 +10,13 @@ import { SheetListModule } from './sheet-list/sheet-list.module';
   ],
   imports: [
     HomeModule,
-    SheetListModule
+    SheetListModule,
+    SheetInfoModule
   ],
   exports: [
     HomeModule,
-    SheetListModule
+    SheetListModule,
+    SheetInfoModule
   ]
 })
 export class PagesModule { }

@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { Banner, HotTag, SongSheet, Singer } from 'src/app/services/data-type/common.types';
 import { NzCarouselComponent, th_TH } from 'ng-zorro-antd';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { SheetService } from 'src/app/services/sheet.service';
 import { Store, select } from '@ngrx/store';
@@ -32,6 +32,7 @@ export class HomeComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private sheetService: SheetService,
     private store$: Store<AppStoreModule>,
     private batchActionsService: BatchActionsService
@@ -62,6 +63,8 @@ export class HomeComponent implements OnInit {
       this.batchActionsService.selectPlayList({ list, index: 0 });
     });
   }
-
+  toInfo(id: number) {
+    this.router.navigate(['sheetInfo', id]);
+  }
 
 }
