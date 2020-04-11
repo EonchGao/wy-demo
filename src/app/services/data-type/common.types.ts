@@ -14,6 +14,7 @@ export interface SongSheet {
     id: number;
     name: string;
     picUrl: string;
+    coverImgUrl: string;
     playCount: number;
     tracks: Array<Song>;
 }
