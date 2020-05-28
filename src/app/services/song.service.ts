@@ -49,6 +49,15 @@ export class SongService {
     return result;
   }
 
+
+  // 获取歌曲详情
+  getSongDetail(ids: string): Observable<Song> {
+    const params = new HttpParams().set('ids', ids)
+    return this.http.get(this.uri + 'song/detail', { params }).pipe(map((res: { songs: Song }) => res.songs[0]));
+
+  }
+
+  // 获取歌词
   getLyric(id: number): Observable<Lyric> {
 
     const params = new HttpParams().set('id', id.toString());

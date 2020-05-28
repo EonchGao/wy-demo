@@ -11,6 +11,7 @@ import { shuffle, findIndex } from 'src/app/util/array';
 import { WyPlayerPanelComponent } from './wy-player-panel/wy-player-panel.component';
 import { NzModalService } from 'ng-zorro-antd';
 import { BatchActionsService } from 'src/app/store/batch-actions.service';
+import { RouterModule, Router } from '@angular/router';
 
 
 const modeTypes: PlayMode[] = [
@@ -79,7 +80,8 @@ export class WyPlayerComponent implements OnInit {
     private store$: Store<AppStoreModule>,
     @Inject(DOCUMENT) private doc: Document,
     private modal: NzModalService,
-    private batchActionsService: BatchActionsService
+    private batchActionsService: BatchActionsService,
+    private router: Router
   ) {
     const appStore$ = this.store$.pipe(select(getPlayer));
     const stateArr = [
@@ -319,5 +321,13 @@ export class WyPlayerComponent implements OnInit {
         this.batchActionsService.clearSong();
       }
     });
+  }
+
+  toInfo(path: [string, number]) {
+    if (path[1]) {
+      this.showPanel = false;
+      this.showVolumePanel = false;
+      this.router.navigate(path);
+    }
   }
 }

@@ -103,7 +103,10 @@ export class WyLyric {
     }
 
     private makeLine(line: string, tline = '') { // 歌词转换
+        console.log(line)
         const result = timeExp.exec(line);
+        console.log(result)
+
         if (result) {
             const txt = line.replace(timeExp, '').trim();
             const txtCn = tline ? tline.replace(timeExp, '').trim() : '';
@@ -116,6 +119,8 @@ export class WyLyric {
                 this.lines.push({ txt, txtCn, time });
             }
         }
+        console.log( this.lines)
+
     }
 
     play(startTime = 0, skip = false) {

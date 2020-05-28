@@ -12,13 +12,14 @@ export interface HotTag {
 
 export interface SongSheet {
     id: number;
+    userId: number;
     name: string;
     picUrl: string;
     coverImgUrl: string;
     playCount: number;
     tags: string[];
     createTime: number;
-    creator: { nicname: string; avatarUrl: string; };
+    creator: { nickname: string; avatarUrl: string; };
     description: string;
     subscribedCount: number;
     shareCount: number;
@@ -32,6 +33,7 @@ export interface Singer {
     name: string;
     picUrl: string;
     albumSize: number;
+    alias: string[];
 }
 
 export interface Song {
@@ -57,4 +59,9 @@ export interface Lyric {
 export interface SheetList {
     playlists: SongSheet[];
     total: number;
+}
+// 歌手详情 
+export interface SingerDetail {
+    artist: Singer;
+    hotSongs: Song[];
 }

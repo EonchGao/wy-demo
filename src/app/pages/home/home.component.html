@@ -41,12 +41,12 @@
         <div class="settled-singer">
           <div class="tit"><b>入驻歌手</b></div>
           <div class="list">
-            <div class="card" *ngFor="let singer of singers">
+            <div class="card" *ngFor="let singer of singers" [routerLink]="['/singer',singer.id]">
               <div class="pic">
                 <img [src]="singer.picUrl" [alt]="singer.name" />
               </div>
               <div class="txt">
-                <b class="ellipsis">名称</b>
+                <b class="ellipsis">{{singer.name}}</b>
                 <span>专辑数：{{singer.albumSize}}</span>
               </div>
             </div>

@@ -3,7 +3,7 @@ import { ServicesModule, API_CONFIG } from './services.module';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Singer } from './data-type/common.types';
+import { Singer, SingerDetail } from './data-type/common.types';
 
 import queryString from 'query-string';
 
@@ -34,6 +34,20 @@ export class SingerService {
     const params = new HttpParams({ fromString: queryString.stringify(args) });
 
     return this.http.get(this.uri + 'artist/list', { params })
+      .pipe(map((res: { artists: Singer[] }) => res.artists));
+  }
+
+  // 获取歌手详情
+  getSingerDetail(id: string): Observable<SingerDetail> {
+    const params = new HttpParams().set('id', id);
+    return this.http.get(this.uri + 'artists', { params })
+      .pipe(map(res => res as SingerDetail));
+  }
+
+  // 获取相似歌手
+  getSimiSinger(id: string): Observable<Singer[]> {
+    const params = new HttpParams().set('id', id);
+    return this.http.get(this.uri + 'simi/artist', { params })
       .pipe(map((res: { artists: Singer[] }) => res.artists));
   }
 
