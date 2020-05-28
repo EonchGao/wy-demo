@@ -65,3 +65,9 @@ export interface SingerDetail {
     artist: Singer;
     hotSongs: Song[];
 }
+ 
+export interface SearchResult {
+    artists?: Singer[];
+    playlists?: SongSheet[];
+    songs?: Song[];
+}
