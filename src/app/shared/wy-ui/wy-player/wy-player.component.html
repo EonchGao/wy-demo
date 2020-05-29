@@ -1,6 +1,6 @@
-<div class="m-player" [@showHide]="showPlayer" appClickOutside [bindFlag]="bindFlag" (onClickOutSide)="onClickOutSide()"
-  (mouseenter)="togglePlayer('show')" (mouseleave)="togglePlayer('hide')" (@showHide.start)="animating=true"
-  (@showHide.done)="animating=false">
+<div class="m-player" [@showHide]="showPlayer" appClickOutside [bindFlag]="bindFlag"
+  (onClickOutSide)="onClickOutSide($event)" (mouseenter)="togglePlayer('show')" (mouseleave)="togglePlayer('hide')"
+  (@showHide.start)="animating=true" (@showHide.done)="onAnimateDone($event)">
   <div class="lock" (click)="isLocked=!isLocked">
     <div class="left">
       <i [class.locked]="isLocked"></i>
@@ -47,7 +47,8 @@
       <div class="ctrl">
         <i class="volume" title="音量" (click)="toggleVolPanel($event)"></i>
         <i [ngClass]="currentMode.type" [title]="currentMode.label" (click)="changeMode()"></i>
-        <p class="open" (click)="toggleListPanel()">
+        <p nz-tooltip [nzVisible]="controlTooltip.show" [nzTooltipTitle]="controlTooltip.title"
+          nzOverlayClassName="tip-bg" class="open" (click)="toggleListPanel()">
           <span></span>
         </p>
         <div class="control-vol" [hidden]="!showVolumePanel">
@@ -61,7 +62,7 @@
       </app-wy-player-panel>
     </div>
   </div>
-  <audio #audio [src]="currentSong?.url" (canplay)="onCanplay()" (timeupdate)="onTimeUpdate($event)"
-    (ended)="onEnded()">
+  <audio #audio [src]="currentSong?.url" (canplay)="onCanplay()" (timeupdate)="onTimeUpdate($event)" (ended)="onEnded()"
+    (error)="onError()">
   </audio>
 </div>

@@ -1,18 +1,19 @@
 import { Component, OnInit, ViewChild, ElementRef, Inject } from '@angular/core';
 import { AppStoreModule } from 'src/app/store';
 import { Store, select } from '@ngrx/store';
-import { getSongList, getPlayList, getCurrentIndex, getPlayer, getPlayMode, getCurrentSong } from 'src/app/store/selectors/player.selector';
+import { getSongList, getPlayList, getCurrentIndex, getPlayer, getPlayMode, getCurrentSong, getCurrentAction } from 'src/app/store/selectors/player.selector';
 import { Song } from 'src/app/services/data-type/common.types';
 import { PlayMode } from './player-type';
-import { SetCurrentIndex, SetPlayMode, SetPlayList, SetSongList } from 'src/app/store/actions/player.action';
-import { Subscription, fromEvent } from 'rxjs';
+import { SetCurrentIndex, SetPlayMode, SetPlayList, SetSongList, SetCurrentAction } from 'src/app/store/actions/player.action';
+import { Subscription, fromEvent, timer } from 'rxjs';
 import { DOCUMENT } from '@angular/common';
 import { shuffle, findIndex } from 'src/app/util/array';
 import { WyPlayerPanelComponent } from './wy-player-panel/wy-player-panel.component';
 import { NzModalService } from 'ng-zorro-antd';
 import { BatchActionsService } from 'src/app/store/batch-actions.service';
 import { RouterModule, Router } from '@angular/router';
-import { trigger, transition, animate, state, style } from '@angular/animations';
+import { trigger, transition, animate, state, style, AnimationEvent } from '@angular/animations';
+import { CurrentActions } from 'src/app/store/reducers/player.reducer';
 
 
 const modeTypes: PlayMode[] = [
@@ -29,6 +30,11 @@ const modeTypes: PlayMode[] = [
   },
 ];
 
+enum TipTiles {
+  Add = '已添加到列表',
+  Play = '已开始播放'
+}
+
 @Component({
   selector: 'app-wy-player',
   templateUrl: './wy-player.component.html',
@@ -43,6 +49,10 @@ const modeTypes: PlayMode[] = [
 export class WyPlayerComponent implements OnInit {
   showPlayer = 'hide';
   isLocked = false;
+  controlTooltip = {
+    title: '',
+    show: false
+  };
 
   animating = false;
 
@@ -116,6 +126,10 @@ export class WyPlayerComponent implements OnInit {
         type: getCurrentSong,
         cb: song => this.watchCurrentSong(song)
       },
+      {
+        type: getCurrentAction,
+        cb: action => this.watchCurrentAction(action)
+      },
 
     ];
 
@@ -156,11 +170,40 @@ export class WyPlayerComponent implements OnInit {
   }
 
   private watchCurrentSong(song: Song) {
-
+    this.currentSong = song;
     if (song) {
-      this.currentSong = song;
       this.duration = song.dt / 1000;
     }
+  }
+
+  private watchCurrentAction(action: CurrentActions) {
+
+    const title = TipTiles[CurrentActions[action]];
+    if (title) {
+      this.controlTooltip.title = title;
+      if (this.showPlayer === 'hide') {
+        this.togglePlayer('show');
+      } else {
+        this.showToolTip();
+      }
+    }
+    this.store$.dispatch(SetCurrentAction({ currentAction: CurrentActions.Other }));
+
+  }
+  onAnimateDone(event: AnimationEvent) {
+    this.animating = false;
+    if (event.toState === 'show' && this.controlTooltip.title) {
+      this.showToolTip();
+    }
+  }
+  private showToolTip() {
+    this.controlTooltip.show = true;
+    timer(1500).subscribe(_ => {
+      this.controlTooltip = {
+        title: '',
+        show: false
+      }
+    })
   }
 
   private updateCurrentIndex(list: Song[], song: Song) {
@@ -175,10 +218,12 @@ export class WyPlayerComponent implements OnInit {
     this.store$.dispatch(SetPlayMode({ playMode: temp }));
   }
 
-  onClickOutSide() {
-    this.showVolumePanel = false;
-    this.showPanel = false;
-    this.bindFlag = false;
+  onClickOutSide(target: HTMLElement) {
+    if (target.dataset.act !== 'delete') {
+      this.showVolumePanel = false;
+      this.showPanel = false;
+      this.bindFlag = false;
+    }
   }
 
   onPercentChange(percent: number) {
@@ -276,6 +321,11 @@ export class WyPlayerComponent implements OnInit {
     } else {
       this.onNext(this.currentIndex + 1);
     }
+  }
+  // 播放错误
+  onError() {
+    this.playing = false;
+    this.bufferPercent = 0;
   }
 
   private loop() {

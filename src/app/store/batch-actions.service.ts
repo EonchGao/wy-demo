@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { AppStoreModule } from '.';
 import { Song } from '../services/data-type/common.types';
 import { Store, select } from '@ngrx/store';
-import { PlayState } from './reducers/player.reducer';
-import { SetSongList, SetPlayList, SetCurrentIndex } from './actions/player.action';
+import { PlayState, CurrentActions } from './reducers/player.reducer';
+import { SetSongList, SetPlayList, SetCurrentIndex, SetCurrentAction } from './actions/player.action';
 import { getPlayer } from './selectors/player.selector';
 import { shuffle, findIndex } from '../util/array';
 
@@ -35,6 +35,7 @@ export class BatchActionsService {
 
     this.store$.dispatch(SetPlayList({ playList: trueList }));
     this.store$.dispatch(SetCurrentIndex({ currentIndex: trueIndex }));
+    this.store$.dispatch(SetCurrentAction({ currentAction: CurrentActions.Play }));
   }
 
   // 添加歌曲
@@ -55,11 +56,14 @@ export class BatchActionsService {
       if (isPlay) {
         insertIndex = songList.length - 1;
       }
-      this.store$.dispatch(SetSongList({ songList }))
-      this.store$.dispatch(SetPlayList({ playList }))
+      this.store$.dispatch(SetSongList({ songList }));
+      this.store$.dispatch(SetPlayList({ playList }));
     }
     if (insertIndex !== this.playerState.currentIndex) {
       this.store$.dispatch(SetCurrentIndex({ currentIndex: insertIndex }));
+      this.store$.dispatch(SetCurrentAction({ currentAction: CurrentActions.Play }));
+    } else {
+      this.store$.dispatch(SetCurrentAction({ currentAction: CurrentActions.Add }));
     }
 
   }
@@ -74,8 +78,10 @@ export class BatchActionsService {
         playList.push(item);
       }
     })
-    this.store$.dispatch(SetSongList({ songList }))
-    this.store$.dispatch(SetPlayList({ playList }))
+    this.store$.dispatch(SetSongList({ songList }));
+    this.store$.dispatch(SetPlayList({ playList }));
+    this.store$.dispatch(SetCurrentAction({ currentAction: CurrentActions.Add }));
+
   }
 
   // 删除歌曲
@@ -95,6 +101,8 @@ export class BatchActionsService {
     this.store$.dispatch(SetSongList({ songList }));
     this.store$.dispatch(SetPlayList({ playList }));
     this.store$.dispatch(SetCurrentIndex({ currentIndex }));
+    this.store$.dispatch(SetCurrentAction({ currentAction: CurrentActions.Delete }));
+
 
   }
 
@@ -102,6 +110,8 @@ export class BatchActionsService {
     this.store$.dispatch(SetSongList({ songList: [] }));
     this.store$.dispatch(SetPlayList({ playList: [] }));
     this.store$.dispatch(SetCurrentIndex({ currentIndex: -1 }));
+    this.store$.dispatch(SetCurrentAction({ currentAction: CurrentActions.Clear }));
+
   }
 
 }
