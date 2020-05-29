@@ -12,6 +12,7 @@ import { WyPlayerPanelComponent } from './wy-player-panel/wy-player-panel.compon
 import { NzModalService } from 'ng-zorro-antd';
 import { BatchActionsService } from 'src/app/store/batch-actions.service';
 import { RouterModule, Router } from '@angular/router';
+import { trigger, transition, animate, state, style } from '@angular/animations';
 
 
 const modeTypes: PlayMode[] = [
@@ -31,9 +32,19 @@ const modeTypes: PlayMode[] = [
 @Component({
   selector: 'app-wy-player',
   templateUrl: './wy-player.component.html',
-  styleUrls: ['./wy-player.component.less']
+  styleUrls: ['./wy-player.component.less'],
+  animations: [trigger('showHide', [
+    state('show', style({ bottom: 0 })),
+    state('hide', style({ bottom: -71 })),
+    transition('show=>hide', [animate('0.3s')]),
+    transition('hide=>show', [animate('0.1s')]),
+  ])]
 })
 export class WyPlayerComponent implements OnInit {
+  showPlayer = 'hide';
+  isLocked = false;
+
+  animating = false;
 
   percent = 0;
   bufferPercent = 0;
@@ -328,6 +339,12 @@ export class WyPlayerComponent implements OnInit {
       this.showPanel = false;
       this.showVolumePanel = false;
       this.router.navigate(path);
+    }
+  }
+
+  togglePlayer(type: string) {
+    if (!this.isLocked && !this.animating) {
+      this.showPlayer = type;
     }
   }
 }

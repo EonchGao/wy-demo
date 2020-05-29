@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { SearchService } from './services/search.service';
 import { SearchResult } from './services/data-type/common.types';
+import { isEmptyObject } from './util/tools';
 
 @Component({
   selector: 'app-root',
@@ -29,10 +30,26 @@ export class AppComponent {
     if (keyWords) {
       this.searchService.search(keyWords).subscribe((res: SearchResult) => {
         console.log(res)
-        this.searchResult = res;
+        this.searchResult = this.highlightKeyWord(keyWords, res);
       })
     } else {
       this.searchResult = {};
     }
   }
+
+
+  private highlightKeyWord(keyWords: string, result: SearchResult): SearchResult {
+    if (!isEmptyObject(result)) {
+      const reg = new RegExp(keyWords, 'ig');
+      ['artists', 'playlists', 'songs'].forEach(type => {
+        if (result[type]) {
+          result[type].forEach(item => {
+            item.name = item.name.replace(reg, '<span class="highlight">$&</span>');
+          });
+        }
+      })
+    }
+    return result;
+  }
+
 }

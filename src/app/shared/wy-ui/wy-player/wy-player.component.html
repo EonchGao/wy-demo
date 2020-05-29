@@ -1,7 +1,9 @@
-<div class="m-player" appClickOutside [bindFlag]="bindFlag" (onClickOutSide)="onClickOutSide()">
-  <div class="lock">
+<div class="m-player" [@showHide]="showPlayer" appClickOutside [bindFlag]="bindFlag" (onClickOutSide)="onClickOutSide()"
+  (mouseenter)="togglePlayer('show')" (mouseleave)="togglePlayer('hide')" (@showHide.start)="animating=true"
+  (@showHide.done)="animating=false">
+  <div class="lock" (click)="isLocked=!isLocked">
     <div class="left">
-      <i></i>
+      <i [class.locked]="isLocked"></i>
     </div>
   </div>
   <div class="hand"></div>
@@ -54,11 +56,8 @@
         </div>
       </div>
       <app-wy-player-panel [show]="showPanel" [playing]="playing" [currentSong]="currentSong" [songList]="songList"
-        (onClose)="showPanel=false" 
-        (onChangeSong)="onChangeSong($event)" 
-        (onDeleteSong)="onDeleteSong($event)"
-        (onClearSong)="onClearSong($event)" 
-        (onToInfo)="toInfo($event)">
+        (onClose)="showPanel=false" (onChangeSong)="onChangeSong($event)" (onDeleteSong)="onDeleteSong($event)"
+        (onClearSong)="onClearSong($event)" (onToInfo)="toInfo($event)">
       </app-wy-player-panel>
     </div>
   </div>
