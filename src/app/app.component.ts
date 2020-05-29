@@ -20,7 +20,7 @@ export class AppComponent {
       path: '/sheet'
     },
   ];
-
+  searchResult: SearchResult;
   constructor(
     private searchService: SearchService
   ) { }
@@ -29,7 +29,10 @@ export class AppComponent {
     if (keyWords) {
       this.searchService.search(keyWords).subscribe((res: SearchResult) => {
         console.log(res)
+        this.searchResult = res;
       })
+    } else {
+      this.searchResult = {};
     }
   }
 }
